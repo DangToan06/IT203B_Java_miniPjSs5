@@ -39,7 +39,7 @@ src/main/java/com/fastfood/
 │
 └── Main.java             # Menu điều khiển - NHÓM TRƯỞNG (TOÀN)
 
-src/test/java/com/fastfood/ # Thư mục chứa Unit Test (JUnit 5) ( Ai làm phần nào thì ghi test luôn )
+src/test/java/com/fastfood/ # Thư mục chứa Unit Test (JUnit 5) - Thành viên 10 
 ```
 ## III. PHÂN CÔNG NHIỆM VỤ
 
