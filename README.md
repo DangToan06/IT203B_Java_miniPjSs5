@@ -46,14 +46,14 @@ src/test/java/com/fastfood/ # Thư mục chứa Unit Test (JUnit 5) ( Ai làm ph
 | STT | Thành viên    | Nhiệm vụ chính   | Chi tiết                                                                         |
 |:----|:--------------|:-----------------|:---------------------------------------------------------------------------------|
 | 01  | Toàn (Leader) | Kiến trúc & Menu | Tạo cấu trúc Project, viết file Main.java điều hướng, Review và Merge code.      |
-| 02  |               | Model: Food      | Tạo class MenuItem (abstract) và Food. Thuộc tính private + Getter/Setter.       | 
-| 03  |               | Model: Drink     | Tạo class Drink. Override calculatePrice() dựa trên size (S, M, L).              | 
-| 04  |               | Model: Order     | Tạo Order và OrderItem. Quản lý trạng thái đơn hàng (Enum: PENDING, PAID...).    | 
-| 05  |               | Repository       | Tạo MenuRepo và OrderRepo bằng ArrayList. Cung cấp phương thức lấy/lưu data.     | 
-| 06  |               | Service: Menu    | Viết hàm CRUD món ăn. Yêu cầu: Dùng Stream API lọc món theo giá/tên.             | 
-| 07  |               | Service: Order   | Viết hàm tạo đơn, tính tổng tiền. Dùng Optional để xử lý khi không tìm thấy đơn. | 
-| 08  |               | Service: Stats   | Thống kê doanh thu, tìm món bán chạy nhất. Yêu cầu: Dùng stream().collect().     | 
-| 09  |               | Exception & Val  | Tạo các Custom Exception và class Validator kiểm tra dữ liệu đầu vào.            | 
-| 10  |               | Unit Test        | Viết Test Case cho logic tính tiền và các hàm quan trọng bằng JUnit 5.           | 
+| 02  |    Minh       | Model: Food      | Tạo class MenuItem (abstract) và Food. Thuộc tính private + Getter/Setter.       | 
+| 03  |    Quang      | Model: Drink     | Tạo class Drink. Override calculatePrice() dựa trên size (S, M, L).              | 
+| 04  |    Nhật       | Model: Order     | Tạo Order và OrderItem. Quản lý trạng thái đơn hàng (Enum: PENDING, PAID...).    | 
+| 05  |    Bách       | Repository       | Tạo MenuRepo và OrderRepo bằng ArrayList. Cung cấp phương thức lấy/lưu data.     | 
+| 06  |    Hoàng      | Service: Menu    | Viết hàm CRUD món ăn. Yêu cầu: Dùng Stream API lọc món theo giá/tên.             | 
+| 07  |    Dương      | Service: Order   | Viết hàm tạo đơn, tính tổng tiền. Dùng Optional để xử lý khi không tìm thấy đơn. | 
+| 08  | Thành yeu dấu | Service: Stats   | Thống kê doanh thu, tìm món bán chạy nhất. Yêu cầu: Dùng stream().collect().     | 
+| 09  |    Huy        | Exception & Val  | Tạo các Custom Exception và class Validator kiểm tra dữ liệu đầu vào.            | 
+| 10  |    Phong      | Unit Test        | Viết Test Case cho logic tính tiền và các hàm quan trọng bằng JUnit 5.           | 
 
 
