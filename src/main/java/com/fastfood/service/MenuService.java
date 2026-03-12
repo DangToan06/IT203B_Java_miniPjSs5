@@ -1,116 +1,81 @@
 package com.fastfood.service;
 
 import com.fastfood.exception.InsufficientStockException;
-import com.fastfood.exception.InvalidOrderIdException;
 import com.fastfood.model.MenuItem;
-import com.fastfood.model.Order;
-import com.fastfood.model.OrderItem;
-import com.fastfood.repository.OrderRepository;
+import com.fastfood.repository.MenuRepository;
+import com.fastfood.util.Validator;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-/**
- * Logic nghiệp vụ cho đơn hàng.
- * Dùng Optional để xử lý khi không tìm thấy đơn hàng.
- */
-public class OrderService {
-    private final OrderRepository orderRepository;
-    private final MenuService menuService;
+public class MenuService {
+    private final MenuRepository repository;
 
-    public OrderService(OrderRepository orderRepository, MenuService menuService) {
-        this.orderRepository = orderRepository;
-        this.menuService = menuService;
+    public MenuService(MenuRepository repository) {
+        this.repository = repository;
     }
 
-    /** Tạo đơn hàng mới (trạng thái PENDING). */
-    public Order createOrder() {
-        Order order = new Order();
-        orderRepository.save(order);
-        return order;
+    public void addMenuItem(MenuItem item) {
+        Validator.validateMenuItem(item);
+        repository.add(item);
     }
 
-    /**
-     * Thêm món vào đơn hàng đang mở.
-     * Kiểm tra đơn hàng tồn tại, món tồn tại, và đủ tồn kho.
-     */
-    public void addItemToOrder(String orderId, String menuItemId, int quantity)
-            throws InvalidOrderIdException, InsufficientStockException {
-        Order order = getOrderById(orderId);
-        if (order.getStatus() != Order.OrderStatus.PENDING) {
-            throw new IllegalStateException(
-                    "Không thể thêm món: đơn hàng đã " + order.getStatus());
-        }
-        MenuItem menuItem = menuService.findById(menuItemId)
+    public void removeMenuItem(String id) {
+        repository.remove(id);
+    }
+
+    public void updateMenuItem(MenuItem item) {
+        Validator.validateMenuItem(item);
+        repository.update(item);
+    }
+
+    public List<MenuItem> getAllMenuItems() {
+        return repository.findAll();
+    }
+
+    public Optional<MenuItem> findById(String id) {
+        return repository.findById(id);
+    }
+
+
+    public List<MenuItem> filterByName(String keyword) {
+        return repository.findAll().stream()
+                .filter(item -> item.getName().toLowerCase()
+                        .contains(keyword.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    public List<MenuItem> filterByPriceRange(double minPrice, double maxPrice) {
+        return repository.findAll().stream()
+                .filter(item -> item.calculatePrice() >= minPrice
+                        && item.calculatePrice() <= maxPrice)
+                .collect(Collectors.toList());
+    }
+
+    public List<MenuItem> filterByMaxPrice(double maxPrice) {
+        return repository.findAll().stream()
+                .filter(item -> item.calculatePrice() <= maxPrice)
+                .collect(Collectors.toList());
+    }
+
+    public void reduceStock(String id, int quantity) throws InsufficientStockException {
+        MenuItem item = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Không tìm thấy món với ID: " + menuItemId));
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("Số lượng phải lớn hơn 0.");
+                        "Không tìm thấy món với ID: " + id));
+        if (item.getStock() < quantity) {
+            throw new InsufficientStockException(
+                    "Không đủ hàng tồn kho cho món: " + item.getName()
+                            + " (còn: " + item.getStock() + ", yêu cầu: " + quantity + ")");
         }
-        menuService.reduceStock(menuItemId, quantity);
-        order.addItem(new OrderItem(menuItem, quantity));
+        item.setStock(item.getStock() - quantity);
+        repository.update(item);
     }
 
-    /** Xóa một dòng món khỏi đơn hàng PENDING và hoàn lại tồn kho. */
-    public void removeItemFromOrder(String orderId, String menuItemId)
-            throws InvalidOrderIdException {
-        Order order = getOrderById(orderId);
-        if (order.getStatus() != Order.OrderStatus.PENDING) {
-            throw new IllegalStateException("Chỉ được xóa món ở đơn hàng PENDING.");
-        }
-        order.getItems().stream()
-                .filter(i -> i.getMenuItem().getId().equals(menuItemId))
-                .findFirst()
-                .ifPresent(item -> {
-                    menuService.restoreStock(menuItemId, item.getQuantity());
-                    order.removeItem(menuItemId);
-                });
-    }
-
-    /** Thanh toán đơn hàng. */
-    public void payOrder(String orderId) throws InvalidOrderIdException {
-        Order order = getOrderById(orderId);
-        if (order.getStatus() != Order.OrderStatus.PENDING) {
-            throw new IllegalStateException("Chỉ có thể thanh toán đơn hàng PENDING.");
-        }
-        if (order.getItems().isEmpty()) {
-            throw new IllegalStateException("Đơn hàng chưa có món nào.");
-        }
-        order.setStatus(Order.OrderStatus.PAID);
-    }
-
-    /** Hủy đơn hàng và hoàn lại tồn kho. */
-    public void cancelOrder(String orderId) throws InvalidOrderIdException {
-        Order order = getOrderById(orderId);
-        if (order.getStatus() == Order.OrderStatus.PAID) {
-            throw new IllegalStateException("Không thể hủy đơn hàng đã thanh toán.");
-        }
-        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
-            throw new IllegalStateException("Đơn hàng đã được hủy trước đó.");
-        }
-        // Hoàn lại tồn kho cho từng món
-        order.getItems().forEach(item -> menuService.restoreStock(
-                item.getMenuItem().getId(), item.getQuantity()));
-        order.setStatus(Order.OrderStatus.CANCELLED);
-    }
-
-    /** Lấy đơn hàng theo ID; ném InvalidOrderIdException nếu không tìm thấy. */
-    public Order getOrderById(String orderId) throws InvalidOrderIdException {
-        return orderRepository.findById(orderId)
-                .orElseThrow(() -> new InvalidOrderIdException(
-                        "Không tìm thấy đơn hàng với ID: " + orderId));
-    }
-
-    /** Trả về Optional – dùng khi không muốn bắt exception. */
-    public Optional<Order> findOrderById(String orderId) {
-        return orderRepository.findById(orderId);
-    }
-
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
-    }
-
-    public double calculateTotal(String orderId) throws InvalidOrderIdException {
-        return getOrderById(orderId).getTotalPrice();
+    public void restoreStock(String id, int quantity) {
+        repository.findById(id).ifPresent(item -> {
+            item.setStock(item.getStock() + quantity);
+            repository.update(item);
+        });
     }
 }
